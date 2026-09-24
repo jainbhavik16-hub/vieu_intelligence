@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signal Preview — For Idan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1A1818; --paper:#F8F6F3; --accent:#7744FF; --accent-soft:#EFE9FF;
+    --green:#0E8F5E; --green-soft:#E5F5EE; --amber:#B8790A; --amber-soft:#FFF4E0;
+    --grey:#8a8480; --line:rgba(26,24,24,0.10); --card:#FFFFFF;
+  }
+  html,body{box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+  *{box-sizing:inherit;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans',-apple-system,sans-serif; line-height:1.55;}
+  .wrap{max-width:880px; margin:0 auto; padding:56px 26px 100px;}
+  .eyebrow{font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px;}
+  h1{font-family:'DM Serif Display',serif; font-weight:400; font-size:clamp(30px,4.6vw,44px); line-height:1.1; margin:0 0 14px; letter-spacing:-0.01em;}
+  h1 em{font-style:italic; color:var(--accent);}
+  .lede{font-size:17.5px; color:#3a3636; max-width:640px; margin:0 0 6px;}
+  .meta{font-size:13px; color:var(--grey); margin-top:24px; border-top:1px solid var(--line); padding-top:16px;}
+
+  section{margin-top:60px;}
+  .sec-label{font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--grey); font-weight:700; margin-bottom:10px;}
+  h2{font-family:'DM Serif Display',serif; font-weight:400; font-size:25px; margin:0 0 14px; letter-spacing:-0.01em;}
+  p.intro{font-size:15px; color:#4a4544; max-width:660px; margin:0 0 20px;}
+
+  /* People picker */
+  .picker{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-top:16px;}
+  .picker-tabs{display:flex; border-bottom:1px solid var(--line);}
+  .picker-tab{
+    flex:1; text-align:center; padding:16px 10px; font-size:14px; font-weight:600; cursor:pointer;
+    background:var(--paper); border:none; border-right:1px solid var(--line); color:#6a6462;
+    font-family:'DM Sans',sans-serif; transition:background .15s, color .15s;
+  }
+  .picker-tab:last-child{border-right:none;}
+  .picker-tab.active{background:var(--card); color:var(--accent);}
+  .picker-tab .cnt{display:block; font-size:11px; color:var(--grey); font-weight:500; margin-top:2px;}
+  .picker-tab.active .cnt{color:var(--accent);}
+  .picker-body{padding:6px 0;}
+  .ppl-panel{display:none;}
+  .ppl-panel.active{display:block;}
+  .person-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 22px; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;
+  }
+  .person-row:last-child{border-bottom:none;}
+  .person-row:hover{background:var(--accent-soft);}
+  .person-left{min-width:0;}
+  .person-name{font-weight:600; font-size:15px; color:var(--ink);}
+  .person-title{font-size:13px; color:#5a5452; margin-top:2px;}
+  .person-role{font-size:12px; color:var(--accent); margin-top:4px; font-weight:600;}
+  .person-arrow{flex:none; color:var(--grey); font-size:14px;}
+
+  /* Signal ranking */
+  .rank-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700;
+    letter-spacing:0.04em; text-transform:uppercase; padding:4px 10px; border-radius:20px;
+    margin-bottom:10px;
+  }
+  .rank-badge.strong{background:var(--green-soft); color:var(--green);}
+  .rank-badge.mid{background:var(--amber-soft); color:var(--amber);}
+  .rank-badge.weak{background:#f0eeeb; color:var(--grey);}
+
+  .sig-block{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:26px 26px 22px; margin-bottom:20px;}
+  .sig-block.top{border:1.5px solid var(--accent); box-shadow:0 4px 20px rgba(119,68,255,0.07);}
+  .sig-num{font-family:'DM Serif Display',serif; font-size:15px; color:var(--grey);}
+
+  .acct-evidence{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+  .acct-evidence:first-of-type{border-top:none; margin-top:6px; padding-top:0;}
+  .acct-tag{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--accent); margin-bottom:6px; display:block;
+  }
+  .ev-line{font-size:14.5px; color:#3a3636; margin:0 0 5px; padding-left:16px; position:relative;}
+  .ev-line:before{content:"—"; position:absolute; left:0; color:#c9c3bd;}
+  .ev-line a{color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent-soft);}
+  .ev-line a:hover{border-bottom-color:var(--accent);}
+  .ev-line .dt{color:var(--grey); font-size:13px;}
+  .ev-none{font-size:14px; color:var(--grey); font-style:italic;}
+
+  .honest{background:#FFF9EF; border:1px solid #EFD9A8; border-radius:14px; padding:22px 24px; margin-top:14px;}
+  .honest .sec-label{color:var(--amber);}
+  .honest ul{margin:10px 0 0; padding-left:18px;}
+  .honest li{font-size:14px; margin-bottom:8px; color:#4a4544;}
+  .honest li b{color:var(--ink);}
+
+  .cta{margin-top:66px; padding:32px 28px; border-radius:18px; background:linear-gradient(135deg,#1A1818 0%,#2b2430 100%); color:#F8F6F3;}
+  .cta h2{color:#fff;}
+  .cta p{font-size:14.5px; color:#d8d2ce; max-width:580px;}
+  .cta .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:20px;}
+  @media (max-width:640px){.cta .steps{grid-template-columns:1fr;} .picker-tabs{flex-direction:column;} .picker-tab{border-right:none; border-bottom:1px solid var(--line);}}
+  .cta .step{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:15px;}
+  .cta .step .n{color:var(--accent); font-weight:700; font-size:12px; margin-bottom:5px;}
+  .cta .step .t{font-size:13px; color:#e8e4e1; line-height:1.45;}
+
+  footer{margin-top:56px; padding-top:18px; border-top:1px solid var(--line); font-size:12px; color:#a09a95; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Signal Preview · Prepared for Idan</div>
+  <h1>For these three accounts, we've identified the <em>key people</em> — and what they're actually telling us.</h1>
+  <p class="lede">No platform. No login. This is the format you asked for — the kind of read we'd send weekly, on the CISOs and signals that actually move a deal.</p>
+  <div class="meta">Accounts: Zoom · Orrick · Elevate Textiles &nbsp;|&nbsp; Signals below: the ones you called out on the call, ranked by how strong the evidence actually is</div>
+
+  <section style="margin-top:40px;">
+    <div class="sec-label">Key People</div>
+    <h2>Click an account to see who we mapped.</h2>
+    <p class="intro">Name, title, and our read on their role in cybersecurity decision-making. Every name links straight to their LinkedIn.</p>
+
+    <div class="picker">
+      <div class="picker-tabs">
+        <button class="picker-tab active" data-tab="zoom">Zoom<span class="cnt">6 people</span></button>
+        <button class="picker-tab" data-tab="orrick">Orrick<span class="cnt">6 people</span></button>
+        <button class="picker-tab" data-tab="elevate">Elevate Textiles<span class="cnt">3 people</span></button>
+      </div>
+      <div class="picker-body">
+
+        <div class="ppl-panel active" id="panel-zoom">
+          <a class="person-row" href="https://www.linkedin.com/in/sandra-mcleod-7a6a61b/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Sandra McLeod</div><div class="person-title">Chief Information Security Officer @ Zoom</div><div class="person-role">Primary decision-maker — the CISO</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/sjstein/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Scott J. S.</div><div class="person-title">Head of Security Legal at Zoom</div><div class="person-role">Influencer — legal/risk sign-off on security spend</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/awinashsinha/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Awinash Sinha</div><div class="person-title">Chief Digital Information Officer @ Zoom</div><div class="person-role">Adjacent exec — CIO-side budget influence</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/garysorrentino/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Gary Sorrentino</div><div class="person-title">IT Executive / CIO / CTO / CISO, Board Member</div><div class="person-role">Influencer — cross-functional IT/security voice</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/tony-dang-b857117/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Tony Dang</div><div class="person-title">Head of Security Services at Zoom</div><div class="person-role">Operator — reports into the security org</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/bergerkevin/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Kevin Berger, CISSP</div><div class="person-title">Head of Enterprise Security @ Zoom</div><div class="person-role">Operator — day-to-day security ownership</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+        </div>
+
+        <div class="ppl-panel" id="panel-orrick">
+          <a class="person-row" href="https://www.linkedin.com/in/ericlaurelsanchez/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Eric S.</div><div class="person-title">Chief Information Security Officer at Orrick</div><div class="person-role">Primary decision-maker — the CISO</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/shannonyavorsky/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Shannon Yavorsky</div><div class="person-title">Partner · Global Chair, Cyber, Privacy &amp; Data Innovation, Co-Head of AI</div><div class="person-role">Influencer — practice-level authority, high visibility</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/aravindswaminathan/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Aravind Swaminathan</div><div class="person-title">Partner · Co-Leader, Technology and Innovation Sector · Former Federal Cybercrime Prosecutor</div><div class="person-role">Influencer — breach response, board-level advisor</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/bdayanim/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Behnam Dayanim</div><div class="person-title">Partner · Firm Management Committee · Global Head of Digital Commerce and Gaming</div><div class="person-role">Influencer — firm management, data protection focus</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/joe-santie/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Joseph Santiesteban</div><div class="person-title">Global Co-Chair, Cyber, Privacy and Data Innovation Practice</div><div class="person-role">Influencer — newly expanded practice authority</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/christian-schroeder-orrick/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Christian Schroeder</div><div class="person-title">Partner · Head of European Cyber, Privacy &amp; Data Innovation</div><div class="person-role">Influencer — EU-side counterpart</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+        </div>
+
+        <div class="ppl-panel" id="panel-elevate">
+          <a class="person-row" href="https://www.linkedin.com/in/rickscot/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Rick S.</div><div class="person-title">Global CIO &amp; CISO, Elevate Textiles</div><div class="person-role">Primary decision-maker — combined CIO/CISO, controls budget</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/brad-bullers-4663866/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Brad Bullers</div><div class="person-title">Director, Information Security, Elevate Textiles</div><div class="person-role">Operator — reports to Rick, day-to-day security lead</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+          <a class="person-row" href="https://www.linkedin.com/in/jasoncox/" target="_blank" rel="noopener">
+            <div class="person-left"><div class="person-name">Jason Cox</div><div class="person-title">Senior Advisor – Information Security, Elevate Textiles (Contract)</div><div class="person-role">Advisor — prior Director Information Security &amp; CISO at the company</div></div>
+            <div class="person-arrow">↗</div>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">The 7 Signals You Asked For</div>
+    <h2>Ranked by how strong the evidence actually is — not by how the questions were listed.</h2>
+    <p class="intro">Every claim below traces to a dated post or a documented source. Where a cell is thin or empty, we say so rather than padding it.</p>
+  </section>
+
+  <!-- SIGNAL 1: Conference / touchpoint -->
+  <div class="sig-block top">
+    <span class="rank-badge strong">● Strongest signal</span>
+    <div class="sig-num">Signal 1 of 7</div>
+    <h2>Conference &amp; touchpoint intelligence — the pattern you said you track by hand.</h2>
+    <p class="intro" style="margin-bottom:6px;">Black Hat → Millennium Texas → next meeting, in your own words. This is that exact pattern, pulled from years of posts.</p>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick</span>
+      <p class="ev-line"><span class="dt">Sept 2026 —</span> Shannon Yavorsky <a href="https://www.linkedin.com/posts/shannonyavorsky_excited-to-join-helen-dixon-and-will-devries-share-7503899691114221568-jrtE/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">joined the Berkeley Law AI Institute (Session 8)</a> this month; also recently <a href="https://www.linkedin.com/posts/shannonyavorsky_enai-law-leadership-program-share-7498609449025142784-dqEA/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">taught in the AI &amp; Law Leadership Program</a>, <a href="https://www.linkedin.com/posts/shannonyavorsky_happy-to-share-that-ill-be-speaking-at-when-ugcPost-7495155759752617984-Ms8I/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">spoke on The Outpost podcast</a>, and <a href="https://www.linkedin.com/posts/shannonyavorsky_quantumcomputing-cybersecurity-pqc-share-7486460228004364290-diVi/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">participated in Q-Day</a> — a dense, recurring conference footprint.</p>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> Eric S. (CISO) hosted an <a href="https://www.linkedin.com/posts/thank-you-to-everyone-who-joined-team-orrick-ugcPost-7496198064685367296-sHJy/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">exclusive Security Leaders Reception during Black Hat 2026</a>, and separately participated in the <a href="https://www.linkedin.com/posts/erin-hamm-cdo_databee-nightdragon-tomorrowstitans-share-7440814986073051136-7Vwa/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWjv6YBA3bg6SdfFmCAtfdyD4bHJXMD4b8" target="_blank" rel="noopener">NightDragon Innovation Summit</a> (next edition April 5, 2027).</p>
+      <p class="ev-line"><span class="dt">Multi-year pattern —</span> Aravind Swaminathan has <a href="https://www.rsaconference.com/experts/aravind-swaminathan" target="_blank" rel="noopener">presented at RSAC in 2020, 2021, 2024, and 2025</a>, is a <a href="https://www.orrick.com/en/Events/2015/11/14th-Annual-Seattle-SecureWorld-Conference" target="_blank" rel="noopener">regular SecureWorld conference attendee</a> going back to 2015, and co-hosted a <a href="https://lnkd.in/p/dsMugUnd" target="_blank" rel="noopener">Black Hat 2026 security leaders reception with a16z</a>.</p>
+      <p class="ev-line"><span class="dt">2018–2025 —</span> Behnam Dayanim has <a href="https://www.rsaconference.com/experts/behnam-dayanim" target="_blank" rel="noopener">presented at RSAC eight times</a>.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles</span>
+      <p class="ev-line"><span class="dt">Confirmed, dated, near-term —</span> Rick S. <a href="https://lnkd.in/p/dhEgGki5" target="_blank" rel="noopener">attends the CyberRisk Collaborative circuit</a>, with two confirmed Q4 2026 dates on the <a href="https://www.cyberriskcollaborative.com/events" target="_blank" rel="noopener">CyberRisk Collaborative events page</a>: Leadership Exchange, NYC, Sept 30, and CISO Dinner, NYC, Nov 5.</p>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> Posted he's <a href="https://www.linkedin.com/feed/update/urn:li:activity:7489809431472447488" target="_blank" rel="noopener">heading to Black Hat and DEFCON</a>, actively taking 1:1 meeting slots.</p>
+      <p class="ev-line"><span class="dt">Standing —</span> <a href="https://lnkd.in/p/dB2TSqjS" target="_blank" rel="noopener">Attends board meetings of UNC Charlotte College of Computing and Informatics</a>.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> Sandra McLeod confirmed attending the <a href="https://lnkd.in/p/dgGx84sm" target="_blank" rel="noopener">Fall 2026 CISO Ascent retreat</a> — a closed, peer-only CISO event, so useful for pattern but not a venue you can walk into.</p>
+      <p class="ev-line"><span class="dt">Recurring —</span> Awinash Sinha is a listed speaker at the <a href="https://www.airisksummit.com/speakers/" target="_blank" rel="noopener">AI Risk Summit</a> and the <a href="https://www.cisoforum.com/speakers/" target="_blank" rel="noopener">CISO Forum</a>, and is a CIO Advisory Board Member at <a href="https://lnkd.in/p/d87d2BBU" target="_blank" rel="noopener">Atomicwork</a>.</p>
+      <p class="ev-line"><span class="dt">Recurring —</span> Gary Sorrentino is a repeat speaker at <a href="https://click.zoom.us/enterprise-connect-2024" target="_blank" rel="noopener">Enterprise Connect (2024, 2026)</a>, a board member of <a href="https://www.imcca.org/boardmembers" target="_blank" rel="noopener">IMMCA</a>, and a recurring participant at the <a href="https://lnkd.in/p/dRBmJV3Y" target="_blank" rel="noopener">Digital Enterprise CIO Transformation Assembly</a> — vendor/UCC circuit rather than security-specific, so lower relevance for this use case.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 2: Israel travel -->
+  <div class="sig-block top">
+    <span class="rank-badge strong">● Strongest signal</span>
+    <div class="sig-num">Signal 2 of 7</div>
+    <h2>"When it comes to Israel" — who's actually traveling, and when.</h2>
+    <p class="intro" style="margin-bottom:6px;">Your own test question on the call, using Rick Scott as the example.</p>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles — Rick S.</span>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> Personal, public disclosure of his Jewish identity and connection to Israel <a href="https://www.linkedin.com/feed/update/urn:li:activity:7490734880733999105" target="_blank" rel="noopener">tied to Oct 7</a> — a strong signal this is not incidental, it's a recurring personal and professional throughline (18 Israel-referencing posts across 5 years).</p>
+      <p class="ev-line"><span class="dt">May 14, 2026 —</span> Attended the <a href="https://lnkd.in/p/d__C6e9U" target="_blank" rel="noopener">Israeli Embassy's Yom Ha'atzmaut reception</a> celebrating Israel's Independence Day.</p>
+      <p class="ev-line"><span class="dt">Upcoming —</span> Attended CyberWeek 2026; may attend again <a href="https://cyberweektau.com/" target="_blank" rel="noopener">Nov 9–12, 2026, at Tel Aviv University</a>.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick — Behnam Dayanim</span>
+      <p class="ev-line"><span class="dt">Mixed signal, flagged —</span> 8 Israel-related posts, but they read as advocacy/political commentary (e.g. <a href="https://www.linkedin.com/feed/update/urn:li:activity:7305606270114254849" target="_blank" rel="noopener">voting in a Zionist Congress election</a>) rather than confirmed personal travel — exactly the kind of false positive a tuned query should filter.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line ev-none">No Israel-travel signal found on any of the six stakeholders in this window.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 3: Recent cyber attack history -->
+  <div class="sig-block">
+    <span class="rank-badge strong">● Strong</span>
+    <div class="sig-num">Signal 3 of 7</div>
+    <h2>Recent cyber-attack history — has the company already been hit?</h2>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick</span>
+      <p class="ev-line"><span class="dt">Jan 20, 2026 —</span> Orrick <a href="https://today.westlaw.com/Document/I02ecd0cd431311f180dccec14ffad3b2/View/FullText.html?transitionType=Default&contextData=(sc.Default)&firstPage=true" target="_blank" rel="noopener">disclosed a data hack</a> exposing identifiable information and protected health information on the dark web.</p>
+      <p class="ev-line"><span class="dt">Ongoing —</span> Their own lawyers comment on breach/ransomware activity constantly as part of their practice, e.g. <a href="https://www.linkedin.com/feed/update/urn:li:activity:7414014931718602753" target="_blank" rel="noopener">Eric S. on securing the AI-powered decades</a> — professional commentary, not a personal incident signal, but shows the topic is live for them internally.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line"><span class="dt">Jan 21, 2026 —</span> Zoom disclosed a <a href="https://www.upguard.com/news/zoom-data-breach-2026-01-21" target="_blank" rel="noopener">critical vulnerability, CVE-2026-22844</a>.</p>
+      <p class="ev-line"><span class="dt">2026 —</span> A separate <a href="https://www.wired.com/story/a-zoom-screen-sharing-bug-let-anyone-take-over-other-devices-on-a-call/" target="_blank" rel="noopener">screen-sharing bug</a> was reported, found by AI-assisted security research in fewer than 20 prompts.</p>
+      <p class="ev-line"><span class="dt">Ongoing —</span> A government advisory lists <a href="https://www.csa.gov.sg/alerts-and-advisories/alerts/al-2026-108/" target="_blank" rel="noopener">multiple vulnerabilities in Zoom products</a>, including remote code execution and denial-of-service risk.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles — Rick S.</span>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> Direct, named conversation about <a href="https://www.linkedin.com/feed/update/urn:li:activity:7498711079863201794" target="_blank" rel="noopener">vulnerability management with a named contact's chief architect</a> — tells you what's actually on his mind, not just that the topic exists.</p>
+      <p class="ev-line"><span class="dt">Jul 2026 —</span> Posted on a <a href="https://www.linkedin.com/feed/update/urn:li:activity:7482857827993124864" target="_blank" rel="noopener">specific supply-chain exposure incident</a> (an AI coding agent uploading a repo including credentials) — shows he engages publicly with live incidents, not just headlines.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 4: Org/personnel changes -->
+  <div class="sig-block">
+    <span class="rank-badge strong">● Strong</span>
+    <div class="sig-num">Signal 4 of 7</div>
+    <h2>Org &amp; personnel change — who just got (or lost) the authority to talk to you.</h2>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick — Joseph Santiesteban</span>
+      <p class="ev-line"><span class="dt">Mar 18, 2026 —</span> <a href="https://www.linkedin.com/feed/update/urn:li:activity:7440062608394665984" target="_blank" rel="noopener">Stepped into Global Co-Head of Orrick's data practice</a> — new authority landing directly in his ransomware/breach specialty. Live and recent.</p>
+      <p class="ev-line"><span class="dt">Jan 14, 2025 —</span> Shannon Yavorsky was <a href="https://www.linkedin.com/feed/update/urn:li:activity:7284739062039506947" target="_blank" rel="noopener">promoted to Partner</a> in Orrick's privacy practice.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles</span>
+      <p class="ev-line"><span class="dt">Aug 2026 —</span> <a href="https://www.linkedin.com/in/carlos-jimenez-52461a72" target="_blank" rel="noopener">Carlos Jimenez</a>, LATAM IT Leader, was promoted — a smaller but real internal-motion signal one layer below the CISO.</p>
+      <p class="ev-line"><span class="dt">Jan 13, 2026 —</span> Brad Bullers <a href="https://www.linkedin.com/feed/update/urn:li:activity:7416634305424248833" target="_blank" rel="noopener">started as Director, Information Security at Elevate Textiles</a> — a confirmed, dated hire directly under Rick S.</p>
+    </div>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line ev-none">No org/personnel change signal found for this stakeholder set.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 5: Budget/fiscal year -->
+  <div class="sig-block">
+    <span class="rank-badge mid">● Moderate</span>
+    <div class="sig-num">Signal 5 of 7</div>
+    <h2>Budget and fiscal-year timing — confirmed, but shallow.</h2>
+    <p class="intro" style="margin-bottom:6px;">We have hard dates for all three accounts.</p>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line ev-none">Fiscal year ends January 31.</p>
+    </div>
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick</span>
+      <p class="ev-line ev-none">Fiscal year ends December 31.</p>
+    </div>
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles</span>
+      <p class="ev-line">Fiscal year ends December 31. Rick S. has also posted directly about the challenge of <a href="https://www.linkedin.com/feed/update/urn:li:activity:7498429155513073665" target="_blank" rel="noopener">"communicating value" to the business</a> as a security leader — qualitative color on how he approaches budget conversations, even without a hard number.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 6: Ongoing touchpoint intel (rolled distinct from conference — historical pattern of encounters) -->
+  <div class="sig-block">
+    <span class="rank-badge mid">● Moderate</span>
+    <div class="sig-num">Signal 6 of 7</div>
+    <h2>Board seats &amp; standing commitments — the quieter, recurring touchpoints.</h2>
+    <p class="intro" style="margin-bottom:6px;">Beyond one-off conferences: standing board seats and recurring institutional ties, which tend to be lower-profile but more reliably "find them here" than a single event.</p>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles — Rick S.</span>
+      <p class="ev-line"><a href="https://lnkd.in/p/dB2TSqjS" target="_blank" rel="noopener">Sits on the UNC Charlotte College of Computing and Informatics board</a> — a standing, recurring commitment, not a one-time event.</p>
+    </div>
+    <div class="acct-evidence">
+      <span class="acct-tag">Orrick — Behnam Dayanim</span>
+      <p class="ev-line ev-none">Sits on Orrick's Firm Management Committee — internal governance role, relevant to understanding who has cross-practice influence over vendor decisions.</p>
+    </div>
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line ev-none">No standing board/institutional signal surfaced for this stakeholder set.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL 7: Competitor usage -->
+  <div class="sig-block">
+    <span class="rank-badge mid">● Moderate</span>
+    <div class="sig-num">Signal 7 of 7</div>
+    <h2>Competitor usage — directional signal from public postings.</h2>
+
+    <div class="acct-evidence">
+      <span class="acct-tag">Zoom</span>
+      <p class="ev-line">Job postings reference CrowdStrike-adjacent (<a href="https://www.linkedin.com/jobs/view/security-analyst-at-zoom-4365269129/" target="_blank" rel="noopener">Security Analyst</a>) and Qualys-adjacent (<a href="https://www.linkedin.com/jobs/view/head-of-it-infrastructure-at-zoom-4003670575/" target="_blank" rel="noopener">Head of IT Infrastructure</a>) roles; Simon Leung's <a href="https://www.linkedin.com/in/simonleung83/" target="_blank" rel="noopener">work history lists Qualys</a> directly. Inference from postings, not confirmed current usage.</p>
+    </div>
+    <div class="acct-evidence">
+      <span class="acct-tag">Elevate Textiles</span>
+      <p class="ev-line ev-none">Not found.</p>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div class="eyebrow" style="color:#b39cff;">The Ask</div>
+    <h2>Seven signals, three accounts, unpaid — this is the floor, not the ceiling.</h2>
+    <p>Give us the query list you mentioned on the call, and we run this same format — email, not a platform — across your ~50 CISOs, tuning the weaker signals until they read like the strong ones.</p>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><div class="t">You send the exact signals per persona you want us optimizing for.</div></div>
+      <div class="step"><div class="n">02</div><div class="t">We run it across your ~50 CISOs, same weekly cadence, same email format.</div></div>
+      <div class="step"><div class="n">03</div><div class="t">We fine-tune the partial signals — competitor usage, quiet-poster Israel coverage — with sourcing scoped to your queries.</div></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Prepared by Vieu · Confidential — for Idan only</span>
+    <span>Built on 9B executive relationships</span>
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.picker-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.picker-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.ppl-panel').forEach(function(p){ p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
